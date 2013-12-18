@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+    <f:view contentType="text/html">
+        <h:head>
+            <f:facet name="first">
+                <meta content='text/html; charset=UTF-8' http-equiv="Content-Type"/>
+                <title>PrimeFaces</title>
+            </f:facet>
+        </h:head>
+
+        <h:body>
+
+            <p:layout fullPage="true">
+
+                <p:layoutUnit position="north" size="100" resizable="true" closable="true" collapsible="true">
+
+                    <h:inputText value = "${tTTJSFManagedBean.data}"  />
+                    <h:inputText value = "${tTTJSFManagedBean.ort}"   />
+                    <h:inputText value = "${tTTJSFManagedBean.kuenstler}" /> 
+
+                    <h:commandButton value="Search" 
+                                       />
+                </p:layoutUnit>
+
+                <p:layoutUnit position="south" size="100" closable="true" collapsible="true">
+
+                </p:layoutUnit>
+
+                <p:layoutUnit position="west" size="175" header="Left" collapsible="true">
+                    <p:menu>
+
+                    </p:menu>
+                </p:layoutUnit>
+
+                <p:layoutUnit position="center">
+                    <h:form>
+                        <h:dataTable  id="messages" value="${tTTJSFManagedBean.sucheVeranstaltungenNachKrieterien()}"
+                                      var="veranstaltung" rendered="true"
+                                     headerClass="table-header" rowClasses="table-row">
+                            <h:column>
+                                <f:facet name="header">Datum</f:facet>
+                                    ${veranstaltung.d.toString()}
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Name</f:facet>
+                                    ${veranstaltung.name}
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Ort</f:facet>
+                                    ${veranstaltung.ort}
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Künstler</f:facet>
+                                    ${veranstaltung.kuenstler}
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">ID</f:facet>
+                                    ${veranstaltung.id}
+                            </h:column>
+                            <h:column>
+                                <h:commandButton 
+                                   
+                                    value="Detail"
+                                    />
+                            </h:column>
+                        </h:dataTable>
+                    </h:form>
+
+
+                </p:layoutUnit>
+
+            </p:layout>
+
+        </h:body>
+
+    </f:view>
+</html>
+
