@@ -4,6 +4,7 @@
  * and open the template in the editor.
  */
 
+import DTO.objecte.DTOKarte;
 import DTO.objecte.DTOKarteBestellen;
 import DTO.objecte.DTOKarteReservieren;
 import DTO.objecte.DTOKategorieInformation;
@@ -11,15 +12,11 @@ import DTO.objecte.DTOKategorieKarte;
 import DTO.objecte.DTOKategorienAuswaehlen;
 import DTO.objecte.DTOKundeNeuSpeichern;
 import DTO.objecte.DTOKundenDaten;
-import DTO.objecte.DTOLoginDaten;
 import DTO.objecte.DTOMessage;
-import DTO.objecte.DTORollenList;
 import DTO.objecte.DTOTopicData;
 import DTO.objecte.DTOVeranstaltung;
 import DTO.objecte.DTOVeranstaltungAnzeigen;
 import DTO.objecte.DTOVeranstaltungInformation;
-import Exceptions.BenutzerNichtInDBException;
-import Exceptions.FalschesPasswordExeption;
 import Exceptions.KarteNichtVerfuegbarException;
 import Exceptions.SaveFailedException;
 import hello.ejb.HelloRemote;
@@ -28,12 +25,12 @@ import java.rmi.RemoteException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
-import javax.naming.NamingException;
 
 /**
  *
@@ -41,19 +38,37 @@ import javax.naming.NamingException;
  */
 @ManagedBean
 @SessionScoped
-public class TTTJSFManagedBean implements Serializable{
-    
-@EJB
-    private HelloRemote bean;  
+public class TTTJSFManagedBean implements Serializable {
+
+    @EJB
+    private HelloRemote bean;
+
+    private String data = null;
+    private String ort = null;
+    private String kuenstler = null;
+    private List<DTOVeranstaltungInformation> veranstaltungsliste;
+    private int veranstaltungsID;
+    private List<DTOKategorieInformation> kategorien;
+    private int kategorieID;
+    private List<DTOKarte> karten;
 
     public TTTJSFManagedBean() {
+        try {
+            sucheVeranstaltungenNachKrieterien();
+        } catch (Exception ex) {
+            Logger.getLogger(TTTJSFManagedBean.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
-    private String data;
-    private String ort;
-    private String kuenstler;
-    DTORollenList _userRollen;
-    String username;
-    List<DTOMessage> messages = new LinkedList();
+
+    public void setVeranstaltungsID(int veranstaltungsID) {
+        this.veranstaltungsID = veranstaltungsID;
+        System.out.println("VeranstaltungsID gesetzt: " + veranstaltungsID);
+        try {
+            getKategorieInfoVonVeranstaltung();
+        } catch (RemoteException ex) {
+            Logger.getLogger(TTTJSFManagedBean.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     public void setData(String data) {
         this.data = data;
@@ -65,32 +80,50 @@ public class TTTJSFManagedBean implements Serializable{
 
     public void setOrt(String ort) {
         this.ort = ort;
-        System.out.println(ort); 
+        System.out.println(ort);
     }
 
     public void setKuenstler(String kuenstler) {
         this.kuenstler = kuenstler;
     }
-    
-       public String getOrt() {
+
+    public String getOrt() {
         return ort;
     }
 
     public String getKuenstler() {
         return kuenstler;
     }
-    
-    
-       public DTOKategorieKarte getAlleFreieKartenNachKategorie(DTOKategorienAuswaehlen kat) throws RemoteException {
-        DTOKategorieKarte x = null;
-        x = bean.getAlleFreieKartenNachKategorie(kat);
-        return x;
+
+    public List<DTOVeranstaltungInformation> getVeranstaltungsliste() {
+        return veranstaltungsliste;
     }
 
-    public ArrayList<DTOKategorieInformation> getKategorieInfoVonVeranstaltung(DTOVeranstaltungAnzeigen v) throws RemoteException {
-        ArrayList<DTOKategorieInformation> x = null;
-        x = bean.getKategorieInfoVonVeranstaltung(v);
-        return x;
+    public List<DTOKategorieInformation> getKategorien() {
+        return kategorien;
+    }
+
+    public void setKategorieID(int kategorieID) {
+        this.kategorieID = kategorieID;
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+
+    public void getAlleFreieKartenNachKategorie() throws RemoteException {
+        DTOKategorieKarte x = null;
+        x = bean.getAlleFreieKartenNachKategorie(new DTOKategorienAuswaehlen(kategorieID));
+        karten = x.getDTOKarten();
+    }
+
+    public void getKategorieInfoVonVeranstaltung() throws RemoteException {
+        DTOVeranstaltungAnzeigen temp = new DTOVeranstaltungAnzeigen(veranstaltungsID);
+        kategorien = bean.getKategorieInfoVonVeranstaltung(temp);
     }
 
     public ArrayList<DTOKundenDaten> getKundenListNachNachname(String nachname) throws RemoteException, Exception {
@@ -109,15 +142,18 @@ public class TTTJSFManagedBean implements Serializable{
         bean.reservierungSpeichern(karten);
     }
 
-    public ArrayList<DTOVeranstaltungInformation> sucheVeranstaltungenNachKrieterien() throws Exception {
-        ArrayList<DTOVeranstaltungInformation> x = null;
-        
-//        SimpleDateFormat sdf = new SimpleDateFormat("dd-M-yyyy hh:mm:ss");
-//	
-//	Date da = sdf.parse(data);
-        
-        x = bean.sucheVeranstaltungenNachKrieterien(new Date(), ort, kuenstler);
-        return x;
+    public /*ArrayList<DTOVeranstaltungInformation>*/ void sucheVeranstaltungenNachKrieterien() throws Exception {
+        Date d;
+        if (data == null) {
+            data = "";
+        }
+        if (!data.equals("")) {
+            SimpleDateFormat sdfToDate = new SimpleDateFormat("dd.MM.yyyy");
+            d = sdfToDate.parse(data);
+        } else {
+            d = new Date();
+        }
+        veranstaltungsliste = bean.sucheVeranstaltungenNachKrieterien(d, ort, kuenstler);
     }
 
     public void verkaufSpeichern(List<DTOKarteBestellen> karten) throws RemoteException, SaveFailedException, Exception, KarteNichtVerfuegbarException {
@@ -141,41 +177,6 @@ public class TTTJSFManagedBean implements Serializable{
         bean.neuenKundenSpeichern(kunde);
     }
 
-    public DTORollenList login(DTOLoginDaten l) throws RemoteException,
-            BenutzerNichtInDBException, FalschesPasswordExeption {
-        _userRollen = bean.login(l);
-        username = l.getUsername(); 
-        return _userRollen;
-    }
-
-    public DTORollenList getUserRollen() {
-        return _userRollen;
-    }
-
-    public void clearRoles() {
-        _userRollen = null;
-    }
-
-    public DTOMessage getFirstMessage() {
-        if (messages.size() > 0) {
-            return messages.get(0);
-        }
-        return null;
-    }
-
-    public void addMessageToClient(DTOMessage m) {
-        messages.add(m);
-//        if (MainGuiCtrl.getVeranstaltungSuchenView() != null) {
-//            MainGuiCtrl.getVeranstaltungSuchenView().checkMessages();
-//        }
-    }
-
-    public void removeFirstMessage() {
-        if (messages.size() > 0) {
-            messages.remove(0);
-        }
-    }
-
     public ArrayList<DTOTopicData> getTopics() throws RemoteException {
         return bean.getTopics();
     }
@@ -189,22 +190,8 @@ public class TTTJSFManagedBean implements Serializable{
             return bean.loadUnpublishedMessages();
 
         } catch (Exception ex) {
-         //   Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+            //   Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
-    
-    public void startListenToMessages() throws RemoteException, NamingException{
-         ArrayList<DTOTopicData> topics = bean.getTopicsVonBenutzer(username);
-         for (DTOTopicData topic :topics){
-            System.out.println("topic  " + topic.getName());
-//            Subscriber s = new Subscriber(topic.getName(), this);
-//              s.subscribe();
-         }
-    }
 }
-
-    
-    
-    
-

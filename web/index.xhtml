@@ -9,39 +9,29 @@
         <h:head>
             <f:facet name="first">
                 <meta content='text/html; charset=UTF-8' http-equiv="Content-Type"/>
-                <title>PrimeFaces</title>
+                <title>TTT - Veranstaltung Suchen</title>
             </f:facet>
         </h:head>
-
         <h:body>
 
             <p:layout fullPage="true">
-
-                <p:layoutUnit position="north" size="100" resizable="true" closable="true" collapsible="true">
-
-                    <h:inputText value = "${tTTJSFManagedBean.data}"  />
-                    <h:inputText value = "${tTTJSFManagedBean.ort}"   />
-                    <h:inputText value = "${tTTJSFManagedBean.kuenstler}" /> 
-
-                    <h:commandButton value="Search" 
-                                       />
-                </p:layoutUnit>
-
-                <p:layoutUnit position="south" size="100" closable="true" collapsible="true">
+                <p:layoutUnit position="north" size="100" resizable="false" closable="false" collapsible="false">
+                    <h:outputText value="Willkommen bei TicTacTicket, dem Buchungssystem in Vorarlberg" style="font-weight:bold;  font-size: x-large"/>
+                    <br/>
+                    <br/>
 
                 </p:layoutUnit>
-
-                <p:layoutUnit position="west" size="175" header="Left" collapsible="true">
-                    <p:menu>
-
-                    </p:menu>
-                </p:layoutUnit>
-
                 <p:layoutUnit position="center">
                     <h:form>
-                        <h:dataTable  id="messages" value="${tTTJSFManagedBean.sucheVeranstaltungenNachKrieterien()}"
+                        <p:panel id="searchPanel">
+                            <h:outputText value="Datum: "/><h:inputText value = "${tTTJSFManagedBean.data}"  />
+                            <h:outputText value="Ort: "/><h:inputText value = "${tTTJSFManagedBean.ort}"   />
+                            <h:outputText value="Künstler: "/><h:inputText value = "${tTTJSFManagedBean.kuenstler}" /> 
+                            <p:commandButton value="Search" actionListener="#{tTTJSFManagedBean.sucheVeranstaltungenNachKrieterien()}" update="searchPanel,message" ajax="false"/>
+                        </p:panel>
+                        <h:dataTable  id="messages" value="${tTTJSFManagedBean.veranstaltungsliste}"
                                       var="veranstaltung" rendered="true"
-                                     headerClass="table-header" rowClasses="table-row">
+                                      headerClass="table-header" rowClasses="table-row">
                             <h:column>
                                 <f:facet name="header">Datum</f:facet>
                                     ${veranstaltung.d.toString()}
@@ -63,19 +53,12 @@
                                     ${veranstaltung.id}
                             </h:column>
                             <h:column>
-                                <h:commandButton 
-                                   
-                                    value="Detail"
-                                    />
+                                <p:commandButton value="Detail" action="${tTTJSFManagedBean.setVeranstaltungsID(veranstaltung.id)}" onclick="window.location.href = '/TTTWEB/faces/kartenkauf.xhtml'"/>
                             </h:column>
                         </h:dataTable>
                     </h:form>
-
-
                 </p:layoutUnit>
-
             </p:layout>
-
         </h:body>
 
     </f:view>
