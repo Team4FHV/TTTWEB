@@ -3,14 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://java.sun.com/jsf/html"
       xmlns:f="http://java.sun.com/jsf/core"
-      xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
       xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
     <f:view contentType="text/html">
         <h:head>
             <f:facet name="first">
                 <meta content='text/html; charset=UTF-8' http-equiv="Content-Type"/>
-                <title>PrimeFaces</title>
+                <title>TTT - Karten Kaufen</title>
             </f:facet>
         </h:head>
 
@@ -23,20 +22,168 @@
                         <h:outputText value="Wählen Sie ein Kategorie aus und kaufen Sie Karten" style="font-weight:bold;  font-size: x-large"/>
                     </p:layoutUnit>
 
-                    <p:layoutUnit position="south" size="100" closable="true" collapsible="true">
-                        Footer
+                    <p:layoutUnit position="south" size="200" closable="true" collapsible="true">
+                        <h:outputText value="Wenn sie die ausgewählten Karten kaufen wollen füllen sie das Formular aus"/>
+                        <h:form id="kauf">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <h:outputText value="Vorname:"/>
+                                                </td>
+                                                <td>
+                                                    <h:inputText id="vorname" value="${tTTJSFManagedBean.customerFirstName}" required="true"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <h:outputText value="Nachname:"/>
+                                                </td>
+                                                <td>
+                                                    <h:inputText id="nachname" value="${tTTJSFManagedBean.customerLastName}" required="true"/>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <h:outputText value="Straße:"/>
+                                                </td>
+                                                <td>
+                                                    <h:inputText id="strasse" value="${tTTJSFManagedBean.customerStreet}" required="true"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <h:outputText value="Hausnummer:" />
+                                                </td>
+                                                <td>
+                                                    <h:inputText id="hausnummer" value="${tTTJSFManagedBean.customerHouseNumber}" required="true"/>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <h:outputText value="Postleitzahl:"/>
+                                                </td>
+                                                <td>
+                                                    <h:inputText id="postleitzahl"  value="${tTTJSFManagedBean.customerPostcode}" required="true"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <h:outputText value="Land:" />
+                                                </td>
+                                                <td>
+                                                    <p:selectOneMenu value="${tTTJSFManagedBean.customerCountry}" required="true">
+                                                        <f:selectItem itemLabel="bitte auswählen" itemValue=""/>
+                                                        <f:selectItem itemLabel="Österreich" itemValue="austria"/>
+                                                        <f:selectItem itemLabel="Deutschland" itemValue="germany"/>
+                                                        <f:selectItem itemLabel="Schweiz" itemValue="switzerland"/>
+                                                        <f:selectItem itemLabel="Liechtenstein" itemValue="liechtenstein"/>
+                                                    </p:selectOneMenu>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table>
+
+                                            <tr>
+                                                <td>
+                                                    <h:outputText value="Zahlungsart:" />
+                                                </td>
+                                                <td>
+                                                    <p:selectOneRadio id="zahlungsart" value="${tTTJSFManagedBean.customerPayingChoice}" required="true">
+                                                        <f:selectItem itemLabel="Abholung" itemValue="1"/>
+                                                        <f:selectItem itemLabel="Vorüberweisung" itemValue="2"/>
+                                                    </p:selectOneRadio>
+                                                </td> 
+                                            </tr>
+                                            <tr>
+                                                <h:commandButton value="Karten kaufen" action="${tTTJSFManagedBean.transaktionAbschliessen()}" onclick="PF('dlg').show()"/>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </h:form>
+                        <p:dialog header="Kauf abgeschlossen" widgetVar="dlg" resizable="false">  
+                            <h:outputText value="Ihre Transaktionsnummer: ${tTTJSFManagedBean.transaktioncode}" />  
+                        </p:dialog>  
                     </p:layoutUnit>
 
-                    <p:layoutUnit position="west" size="175" header="Left" collapsible="true">
+
+                    <p:layoutUnit position="east" size="175" header="Warenkorb" collapsible="true" resizable="true" collapseSize="5">
+                        <h:dataTable id="basket" value="${tTTJSFManagedBean.warenkorb}"
+                                     var="karten" rendered="true"
+                                     headerClass="table-header" rowClasses="table-row">
+                            <h:column>
+                                <f:facet name="header">ID</f:facet>
+                                    ${karten.ID}
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Reihe</f:facet>
+                                    ${karten.reihe}
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Platz</f:facet>
+                                    ${karten.platz}
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Preis</f:facet>
+                                ${tTTJSFManagedBean.kategorie.preis}€
+                            </h:column>
+                            <h:column>
+                                <p:commandButton value="Entfernen" action="${tTTJSFManagedBean.KarteEntfernen(karten.ID)}" update="basket :karten"/>
+                            </h:column>
+                        </h:dataTable>
+                        <f:verbatim><hr/></f:verbatim>
+                        <h:outputText value="Gesamtpreis: ${tTTJSFManagedBean.totalPrice()} €"/>
+
+                    </p:layoutUnit>
+
+                    <p:layoutUnit position="west" size="175" header="Kategorien" collapsible="true" resizable="true" collapseSize="5">
                         <p:menu>
                             <c:forEach items="${tTTJSFManagedBean.kategorien}" var="kategorie">
-                                <p:menuitem value="${kategorie.id}, ${kategorie.name}" actionListener="${tTTJSFManagedBean.setKategorieID(kategorie.id)}"/>
+                                <c:if test="${kategorie.freieplaetze >0}">
+                                    <p:menuitem value="${kategorie.id}, ${kategorie.name}" actionListener="${tTTJSFManagedBean.setKategorieID(kategorie.id)}" update="karten"/>
+                                </c:if>
                             </c:forEach>
                         </p:menu>
                     </p:layoutUnit>
 
-                    <p:layoutUnit position="center">
-                        Welcome to PrimeFaces
+                    <p:layoutUnit position="center" header="Verfügbare Karten">
+                        <h:dataTable  id="karten" value="${tTTJSFManagedBean.karten}"
+                                      var="karten" rendered="true"
+                                      headerClass="table-header" rowClasses="table-row">
+                            <h:column>
+                                <f:facet name="header">ID</f:facet>
+                                    ${karten.ID}
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Reihe</f:facet>
+                                    ${karten.reihe}
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Platz</f:facet>
+                                    ${karten.platz}
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Preis</f:facet>
+                                ${tTTJSFManagedBean.kategorie.preis}€
+                            </h:column>
+                            <h:column>
+                                <p:commandButton value="Auswählen" action="${tTTJSFManagedBean.karteKaufen(karten.ID)}" update="karten :basket"/>
+                            </h:column>
+                        </h:dataTable>
                     </p:layoutUnit>
 
                 </p:layout>
