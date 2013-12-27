@@ -142,7 +142,7 @@
                                 ${tTTJSFManagedBean.kategorie.preis}€
                             </h:column>
                             <h:column>
-                                <p:commandButton value="Entfernen" action="${tTTJSFManagedBean.KarteEntfernen(karten.ID)}" update="basket :karten"/>
+                                <p:commandButton value="Entfernen" action="${tTTJSFManagedBean.KarteEntfernen(karten.ID)}" update="basket"/>
                             </h:column>
                         </h:dataTable>
                         <f:verbatim><hr/></f:verbatim>
@@ -181,7 +181,7 @@
                                 ${tTTJSFManagedBean.kategorie.preis}€
                             </h:column>
                             <h:column>
-                                <p:commandButton value="Auswählen" action="${tTTJSFManagedBean.karteKaufen(karten.ID)}" update="karten :basket"/>
+                                <p:commandButton value="Auswählen" action="${tTTJSFManagedBean.karteKaufen(karten.ID)}" update="karten"/>
                             </h:column>
                         </h:dataTable>
                     </p:layoutUnit>
