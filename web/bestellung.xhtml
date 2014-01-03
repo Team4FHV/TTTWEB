@@ -1,0 +1,134 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+    <h:head>
+        <title>Bestellvorgang Abschliessen</title>
+    </h:head>
+    <h:body>
+        <h:outputText value="Bestellvorgang abschließen" style="font-weight:bold;  font-size: x-large"/>
+        <br/>
+        <br/>
+        <h:outputText value="Hier eine Übersicht über ihre Bestellung"/>
+        <h:form id="north">
+            <table width="250">
+                <tr>
+                    <td>
+                        <h:dataTable id="basket" value="#{tTTJSFManagedBean.warenkorb}"
+                                     var="kartenBasket" rendered="true"
+                                     headerClass="table-header" rowClasses="table-row" style="">
+                            <h:column>
+                                <f:facet name="header">ID</f:facet> 
+                                    #{kartenBasket.ID}
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Reihe</f:facet>
+                                    #{kartenBasket.reihe}
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Platz</f:facet>
+                                    #{kartenBasket.platz}
+                            </h:column>
+                            <h:column>
+                                <f:facet name="header">Preis</f:facet>
+                                #{kartenBasket.preis}€
+                            </h:column>
+                            <h:column>
+                                <p:commandButton value="Entfernen" action="${tTTJSFManagedBean.KarteEntfernen(kartenBasket.ID)}" update=":north"/>
+                            </h:column>
+                        </h:dataTable>
+                        <f:verbatim><hr/></f:verbatim>
+                        <h:outputText value="Gesamtpreis: #{tTTJSFManagedBean.totalPrice()} €"/>
+                    </td>
+                </tr>
+            </table>
+        </h:form>
+        <br />
+        <br/>
+        <h:form id="south">
+            <h:outputText value="Bestellformular" style="font-size: larger; font-weight: bold"/>
+            <table title="Bestellformular">
+                <tr>
+                    <td>
+                        <h:outputText value="Vorname:"/>
+                    </td>
+                    <td>
+                        <h:inputText id="vorname" value="#{tTTJSFManagedBean.customerFirstName}" required="true" requiredMessage="Eingabe des Vornamen erforderlich"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h:outputText value="Nachname:"/>
+                    </td>
+                    <td>
+                        <h:inputText id="nachname" value="#{tTTJSFManagedBean.customerLastName}" required="true" requiredMessage="Eingabe des Nachnamen erforderlich"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h:outputText value="Straße:"/>
+                    </td>
+                    <td>
+                        <h:inputText id="strasse" value="#{tTTJSFManagedBean.customerStreet}" required="true" requiredMessage="Eingabe der Straße erforderlich"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h:outputText value="Hausnummer:" />
+                    </td>
+                    <td>
+                        <h:inputText id="hausnummer" value="#{tTTJSFManagedBean.customerHouseNumber}" required="true" requiredMessage="Eingabe der Hausnummer erforderlich"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h:outputText value="Postleitzahl:"/>
+                    </td>
+                    <td>
+                        <h:inputText id="postleitzahl"  value="#{tTTJSFManagedBean.customerPostcode}" required="true" requiredMessage="Eingabe der  Postleitzahl erforderlich"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h:outputText value="Land:" />
+                    </td>
+                    <td>
+                        <p:selectOneMenu value="#{tTTJSFManagedBean.customerCountry}" required="true" requiredMessage="Auswahl eines Landes erforderlich">
+                            <f:selectItem itemLabel="bitte auswählen" itemValue=""/>
+                            <f:selectItem itemLabel="Österreich" itemValue="austria"/>
+                            <f:selectItem itemLabel="Deutschland" itemValue="germany"/>
+                            <f:selectItem itemLabel="Schweiz" itemValue="switzerland"/>
+                            <f:selectItem itemLabel="Liechtenstein" itemValue="liechtenstein"/>
+                        </p:selectOneMenu>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h:outputText value="Zahlungsart:" />
+                    </td>
+                    <td>
+                        <p:selectOneRadio id="zahlungsart" value="#{tTTJSFManagedBean.customerPayingChoice}" required="true" requiredMessage="Auswahl einer Zahlungsart ist erforderlich!">
+                            <f:selectItem itemLabel="Abholung" itemValue="1"/>
+                            <f:selectItem itemLabel="Vorüberweisung" itemValue="2"/>
+                        </p:selectOneRadio>
+                    </td> 
+                </tr>
+            </table>
+            <br/>
+            <table>
+                <tr>
+                    <td>
+                        <p:commandButton value="Zurück" onclick="window.location.href = '/TTTWEB/faces/kartenkauf.xhtml'"/>
+                    </td>
+                    <td>
+                        <p:growl id="messages" showDetail="true" sticky="true"/>
+                        <p:commandButton value="Karten kaufen" action="#{tTTJSFManagedBean.transaktionAbschliessen}" update="messages"/>
+                    </td>
+                </tr>
+            </table>
+        </h:form>
+    </h:body>
+</html>
+

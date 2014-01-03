@@ -1,9 +1,10 @@
+package webclasses;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 import DTO.objecte.DTOKarte;
 import DTO.objecte.DTOKarteBestellen;
 import DTO.objecte.DTOKarteReservieren;
@@ -32,8 +33,10 @@ import javax.ejb.EJB;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 import javax.faces.context.ExternalContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
-import javax.xml.ws.Response;
+import javax.faces.event.ActionEvent;
 
 /**
  *
@@ -54,7 +57,7 @@ public class TTTJSFManagedBean implements Serializable {
     private List<DTOKategorieInformation> kategorien;
     private int kategorieID;
     private List<DTOKarte> karten;
-    private List<DTOKarte> warenkorb = new LinkedList<DTOKarte>();
+    private List<Object[]> warenkorb = new LinkedList<Object[]>();
     private String customerFirstName;
     private String customerLastName;
     private String customerStreet;
@@ -73,25 +76,36 @@ public class TTTJSFManagedBean implements Serializable {
     }
 
     public void setVeranstaltungsID(int veranstaltungsID) {
-        this.veranstaltungsID = veranstaltungsID;
-        karten = new LinkedList<DTOKarte>();
-        warenkorb = new LinkedList<DTOKarte>();
-        System.out.println("VeranstaltungsID gesetzt: " + veranstaltungsID);
         try {
-            getKategorieInfoVonVeranstaltung();
-            if (!kategorien.isEmpty()) {
-                kategorieID = kategorien.get(0).getId();
-                getAlleFreieKartenNachKategorie();
-            } else {
-                karten = new LinkedList<>();
+            this.veranstaltungsID = veranstaltungsID;
+            kategorien = new LinkedList<DTOKategorieInformation>();
+            karten = new LinkedList<DTOKarte>();
+            System.out.println("VeranstaltungsID gesetzt: " + veranstaltungsID);
+            try {
+                getKategorieInfoVonVeranstaltung();
+                if (!kategorien.isEmpty()) {
+                    kategorieID = kategorien.get(0).getId();
+                    getAlleFreieKartenNachKategorie();
+                } else {
+                    karten = new LinkedList<>();
+                }
+            } catch (RemoteException ex) {
+                Logger.getLogger(TTTJSFManagedBean.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } catch (RemoteException ex) {
+            ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+            ec.redirect(((HttpServletRequest) ec.getRequest()).getRequestURI());
+        } catch (IOException ex) {
             Logger.getLogger(TTTJSFManagedBean.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    public List<DTOKarte> getWarenkorb() {
-        return warenkorb;
+    public List<WarenkorbKarte> getWarenkorb() {
+        List<WarenkorbKarte> rv = new LinkedList<WarenkorbKarte>();
+        for (Object[] temp : warenkorb) {
+            DTOKarte k = (DTOKarte) temp[0];
+            rv.add(new WarenkorbKarte(k.getID(), k.getReihe(), k.getPlatz(), (double) temp[1]));
+        }
+        return rv;
     }
 
     public void setData(String data) {
@@ -128,11 +142,18 @@ public class TTTJSFManagedBean implements Serializable {
     }
 
     public void setKategorieID(int kategorieID) {
-        this.kategorieID = kategorieID;
-        warenkorb = new LinkedList<DTOKarte>();
         try {
-            getAlleFreieKartenNachKategorie();
-        } catch (RemoteException ex) {
+            this.kategorieID = kategorieID;
+            karten = new LinkedList<DTOKarte>();
+            System.out.println("KategorieID gesetzt auf: " + kategorieID);
+            try {
+                getAlleFreieKartenNachKategorie();
+            } catch (RemoteException ex) {
+                Logger.getLogger(TTTJSFManagedBean.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+            ec.redirect(((HttpServletRequest) ec.getRequest()).getRequestURI());
+        } catch (IOException ex) {
             Logger.getLogger(TTTJSFManagedBean.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -208,9 +229,27 @@ public class TTTJSFManagedBean implements Serializable {
     }
 
     public void getAlleFreieKartenNachKategorie() throws RemoteException {
-        DTOKategorieKarte x = null;
-        x = bean.getAlleFreieKartenNachKategorie(new DTOKategorienAuswaehlen(kategorieID));
-        karten = x.getDTOKarten();
+        DTOKategorieKarte x = bean.getAlleFreieKartenNachKategorie(new DTOKategorienAuswaehlen(kategorieID));
+        List<DTOKarte> karteInKategorie = x.getDTOKarten();
+        List<DTOKarte> verfuegbareKarten = new LinkedList<DTOKarte>();
+        for (DTOKarte k : karteInKategorie) {
+            int i = 0;
+            boolean isInWarenkorb = false;
+            while (i < warenkorb.size()) {
+                Object[] temp = warenkorb.get(i);
+                DTOKarte w = (DTOKarte) temp[0];
+                if (k.getID() == w.getID()) {
+                    isInWarenkorb = true;
+                    break;
+                } else {
+                    i++;
+                }
+            }
+            if (isInWarenkorb == false) {
+                verfuegbareKarten.add(k);
+            }
+        }
+        karten = verfuegbareKarten;
     }
 
     public void getKategorieInfoVonVeranstaltung() throws RemoteException {
@@ -219,8 +258,7 @@ public class TTTJSFManagedBean implements Serializable {
     }
 
     public ArrayList<DTOKundenDaten> getKundenListNachNachname(String nachname) throws RemoteException, Exception {
-        ArrayList<DTOKundenDaten> x = null;
-        x = bean.getKundenListNachNachname(nachname);
+        ArrayList<DTOKundenDaten> x = bean.getKundenListNachNachname(nachname);
         return x;
     }
 
@@ -234,7 +272,7 @@ public class TTTJSFManagedBean implements Serializable {
         bean.reservierungSpeichern(karten);
     }
 
-    public /*ArrayList<DTOVeranstaltungInformation>*/ void sucheVeranstaltungenNachKrieterien() throws Exception {
+    public void sucheVeranstaltungenNachKrieterien() throws Exception {
         Date d;
         if (data == null) {
             data = "";
@@ -270,22 +308,42 @@ public class TTTJSFManagedBean implements Serializable {
     }
 
     public void karteKaufen(int id) {
-        System.out.println("Karte gekauft " + id);
-        for (int i = 0; i < karten.size(); i++) {
-            if (karten.get(i).getID() == id) {
-                warenkorb.add(karten.get(i));
-                karten.remove(i);
+        try {
+            System.out.println("Karte gekauft " + id);
+            for (int i = 0; i < karten.size(); i++) {
+                if (karten.get(i).getID() == id) {
+                    for (DTOKategorieInformation k : kategorien) {
+                        if (k.getId() == kategorieID) {
+                            double preis = k.getPreis().doubleValue();
+                            Object[] temp = {karten.get(i), preis};
+                            warenkorb.add(temp);
+                            karten.remove(i);
+                        }
+                    }
+                }
             }
+            ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+            ec.redirect(((HttpServletRequest) ec.getRequest()).getRequestURI());
+        } catch (IOException ex) {
+            Logger.getLogger(TTTJSFManagedBean.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
     public void KarteEntfernen(int id) {
-        System.out.println("Karten entfernt " + id);
-        for (int i = 0; i < warenkorb.size(); i++) {
-            if (warenkorb.get(i).getID() == id) {
-                karten.add(warenkorb.get(i));
-                warenkorb.remove(i);
+        try {
+            System.out.println("Karten entfernt " + id);
+            for (int i = 0; i < warenkorb.size(); i++) {
+                Object[] temp = warenkorb.get(i);
+                DTOKarte k = (DTOKarte) temp[0];
+                if (k.getID() == id) {
+                    karten.add(k);
+                    warenkorb.remove(i);
+                }
             }
+            ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+            ec.redirect(((HttpServletRequest) ec.getRequest()).getRequestURI());
+        } catch (IOException ex) {
+            Logger.getLogger(TTTJSFManagedBean.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -295,24 +353,23 @@ public class TTTJSFManagedBean implements Serializable {
             return preis;
         }
 
-        for (DTOKategorieInformation k : kategorien) {
-            if (k.getId() == kategorieID) {
-                preis = k.getPreis().doubleValue();
-            }
+        for (Object[] temp : warenkorb) {
+            preis = preis + (double) temp[1];
         }
-        preis = preis * warenkorb.size();
-        preis = Math.round(preis * 100) / 100.0;
         return preis;
     }
 
     private void verkaufSpeichern() {
         try {
-            List<DTOKarteBestellen> bestellung = new LinkedList<DTOKarteBestellen>();
-            for (DTOKarte k : warenkorb) {
-                bestellung.add(new DTOKarteBestellen(k.getID(), kategorieID, false));
+            if (!warenkorb.isEmpty()) {
+                List<DTOKarteBestellen> bestellung = new LinkedList<DTOKarteBestellen>();
+                for (Object[] temp : warenkorb) {
+                    DTOKarte k = (DTOKarte) temp[0];
+                    bestellung.add(new DTOKarteBestellen(k.getID(), 1, false));
+                }
+                bean.verkaufSpeichern(bestellung);
+                warenkorb = new LinkedList<Object[]>();
             }
-            bean.verkaufSpeichern(bestellung);
-            warenkorb = new LinkedList<DTOKarte>();
         } catch (Exception ex) {
             System.out.println("Verkauf Speichern Error: " + ex.getMessage());
         }
@@ -320,24 +377,22 @@ public class TTTJSFManagedBean implements Serializable {
     }
 
     public void transaktionAbschliessen() {
-        try {
+        if (!warenkorb.isEmpty()) {
+            System.out.println("Transaktion wird abgeschlossen!");
             Date d = new Date();
-            transaktioncode = "" + customerPostcode + "-" + customerHouseNumber + d.getDay() + "-" + d.getMonth() + "-" + d.getYear() + "-" + d.getMinutes();
+            transaktioncode = "" + customerPostcode + "-" + customerHouseNumber + "-" + d.getDay() + "-" + d.getMonth() + "-" + d.getYear() + "-" + d.getMinutes();
             verkaufSpeichern();
-            deleteInformation();
-            ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
-            ec.redirect(ec.getRequestContextPath() + "/index.xhtml");
-        } catch (IOException ex) {
-            Logger.getLogger(TTTJSFManagedBean.class.getName()).log(Level.SEVERE, null, ex);
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage(null, new FacesMessage("Succesfull", "Ihr Transaktionscode:\n " + transaktioncode));
+        } else {
+            FacesContext context = FacesContext.getCurrentInstance();
+            context.addMessage(null, new FacesMessage("Information", "Ihr Warenkorb enthält keine Elemente. Transaktion wurde nicht ausgeführt."));
         }
+
     }
 
     public String getTransaktioncode() {
         return transaktioncode;
-    }
-
-    private void deleteInformation() {
-        warenkorb = new LinkedList<DTOKarte>();
     }
 
 }
